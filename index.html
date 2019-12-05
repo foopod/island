@@ -9,7 +9,7 @@
 		</style>
 	</head>
 	<body>
-		<script type="module">
+		<script>
             import * as THREE from '../three.module.js';
             import { ImprovedNoise } from './ImprovedNoise.js';
 
@@ -34,7 +34,6 @@
             light.position.set( - 1, 1.75, 1 );
             light.position.multiplyScalar( 30 );
             scene.add(light);
-            scene.background = new THREE.Color().setHSL(200/360,1,0.5);
 
             //create a blue LineBasicMaterial
             var material = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors});
@@ -123,7 +122,7 @@
                             var distance  = Math.sqrt(Math.pow(Math.abs(x -width*.5),2) + Math.pow(Math.abs(y -width*.5),2))/width;
                             var power = 10;
                             // height = ((Math.cos(Math.PI * distance +1))/2)*power; 
-                            var height =  Math.pow(0.5 + 0.5 * Math.cos(Math.PI * distance), power)
+                            var height =  Math.pow(0.5 + 0.5 * Math.cos(Math.PI * distance), power);
                             // console.log(height);
                             data[i]  = (data[i] * height)/2;
                         }
