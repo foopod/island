@@ -2,14 +2,14 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>My first three.js app</title>
+        <title>Procedural Island</title>
 		<style>
 			body { margin: 0; }
 			canvas { width: 100%; height: 100% }
 		</style>
 	</head>
 	<body>
-
+        <span id="regen" style="position: absolute;padding: 10px;background:white;border-radius: 3px;margin: 5px;">Regenerate</span>
         <script type="module" src="./three.module.js"></script>
         <script type="module" src="./ImprovedNoise.js"></script>
 		<script type="module">
@@ -50,51 +50,52 @@
             // geometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0, 0 ) );
             // mesh.position.set(-4000, 0, 0);
 
-            var vertices = geometry.attributes.position.array;
-            var colors = [];
+            function draw(){
+                var vertices = geometry.attributes.position.array;
+                var colors = [];
 
-            for ( var i = 0, j = 0, l = vertices.length; i < l; i ++, j += 3 ) {
-                vertices[ j + 1 ] = data[ i ]*10;
-                var c = new THREE.Color();
-                var height = vertices[ j + 1 ]/1000;
-                var hue = 0;
-                var sat = 1;
-                var light = 0.5;
-                //water
-                if(height < 0.01){
-                    hue = 200/360;
+                for ( var i = 0, j = 0, l = vertices.length; i < l; i ++, j += 3 ) {
+                    vertices[ j + 1 ] = data[ i ]*10;
+                    var c = new THREE.Color();
+                    var height = vertices[ j + 1 ]/1000;
+                    var hue = 0;
+                    var sat = 1;
+                    var light = 0.5;
+                    //water
+                    if(height < 0.01){
+                        hue = 200/360;
 
-                //sand
-                }else if ( height < 0.03){
-                    hue = 53/360;
-                    light = 0.5 * (1-height*10);
+                    //sand
+                    }else if ( height < 0.03){
+                        hue = 53/360;
+                        light = 0.5 * (1-height*10);
 
-                //forest
-                } else if( height < 0.3){
-                    hue = 116/360;
-                    light = 0.1 + (height*0.8);
+                    //forest
+                    } else if( height < 0.3){
+                        hue = 116/360;
+                        light = 0.1 + (height*0.8);
 
-                //cliffs
-                } 
-                else if( height < 0.4){
-                    hue = 116/360;
-                    sat = 0.5-(height*2-0.4);
-                    light = 0.6* (height*2);
+                    //cliffs
+                    } 
+                    else if( height < 0.4){
+                        hue = 116/360;
+                        sat = 0.5-(height*2-0.4);
+                        light = 0.6* (height*2);
 
-                //snow
-                } else {
-                    sat = 0;
-                    light = 1* (height*2);  
+                    //snow
+                    } else {
+                        sat = 0;
+                        light = 1* (height*2);  
+                    }
+                    c.setHSL(hue,sat,light)
+                    colors.push( c.r, c.g, c.b );
                 }
-                c.setHSL(hue,sat,light)
-                colors.push( c.r, c.g, c.b );
-            }
 
-            geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-            geometry.computeVertexNormals();
-            console.log(geometry);
-            
+                geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+                geometry.computeVertexNormals();
 
+            }    
+            draw();
             // controls
             // var controls = new OrbitControls( camera, renderer.domElement );
             // // controls.minPolarAngle = Math.PI/0.5;
@@ -112,6 +113,13 @@
             }
 
             animate();
+
+            function regen(){
+                data = generateHeight( worldWidth, worldDepth );
+                draw();
+
+            }
+            document.getElementById("regen").addEventListener('click', regen);
 
             function generateHeight( width, height ) {
 				var size = width * height, data = new Uint8Array( size ),
