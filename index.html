@@ -9,7 +9,7 @@
 		</style>
 	</head>
 	<body>
-		<script>
+		<script type="module">
             import * as THREE from '../three.module.js';
             import { ImprovedNoise } from './ImprovedNoise.js';
 
@@ -34,6 +34,7 @@
             light.position.set( - 1, 1.75, 1 );
             light.position.multiplyScalar( 30 );
             scene.add(light);
+            scene.background = new THREE.Color().setHSL(200/360,1,0.5);
 
             //create a blue LineBasicMaterial
             var material = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors});
