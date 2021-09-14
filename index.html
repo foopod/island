@@ -1,150 +1,187 @@
-<!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-        <title>Procedural Island</title>
-		<style>
-			body { margin: 0; }
-			canvas { width: 100%; height: 100% }
-		</style>
-	</head>
-	<body>
-        <span id="regen" style="position: absolute;padding: 10px;background:white;border-radius: 3px;margin: 5px;">Regenerate</span>
-        <script type="module" src="./three.module.js"></script>
-        <script type="module" src="./ImprovedNoise.js"></script>
-		<script type="module">
-            import * as THREE from './three.module.js';
-            import { ImprovedNoise } from './ImprovedNoise.js';
-
-            var worldWidth = 512, worldDepth = 512;
-            var data = generateHeight( worldWidth, worldDepth );
-
-			var renderer = new THREE.WebGLRenderer();
-            renderer.setSize( window.innerWidth, window.innerHeight );
-            renderer.setClearColor()
-            document.body.appendChild( renderer.domElement );
-
-            var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 5000 );
-            camera.position.set( 0, 500, 2000 );
-            camera.rotateX(-Math.PI *0.1);
-
-            var clock = new THREE.Clock();
-            
-
-            var scene = new THREE.Scene();
-            var light = new THREE.DirectionalLight(0xffffff, 1);
-            light.color.setHSL( 0.1, 1, 0.95 );
-            light.position.set( - 1, 1.75, 1 );
-            light.position.multiplyScalar( 30 );
-            scene.add(light);
-            scene.background = new THREE.Color().setHSL(200/360,1,0.5);
-
-            //create a blue LineBasicMaterial
-            var material = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors});
-
-            var geometry = new THREE.PlaneBufferGeometry( 4000, 4000, worldWidth -1, worldDepth - 1);
-
-            
-            var mesh = new THREE.Mesh( geometry, material);
-            geometry.rotateX( - Math.PI / 2 );
-            // geometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0, 0 ) );
-            // mesh.position.set(-4000, 0, 0);
-
-            function draw(){
-                var vertices = geometry.attributes.position.array;
-                var colors = [];
-
-                for ( var i = 0, j = 0, l = vertices.length; i < l; i ++, j += 3 ) {
-                    vertices[ j + 1 ] = data[ i ]*10;
-                    var c = new THREE.Color();
-                    var height = vertices[ j + 1 ]/1000;
-                    var hue = 0;
-                    var sat = 1;
-                    var light = 0.5;
-                    //water
-                    if(height < 0.01){
-                        hue = 200/360;
-
-                    //sand
-                    }else if ( height < 0.03){
-                        hue = 53/360;
-                        light = 0.5 * (1-height*10);
-
-                    //forest
-                    } else if( height < 0.3){
-                        hue = 116/360;
-                        light = 0.1 + (height*0.8);
-
-                    //cliffs
-                    } 
-                    else if( height < 0.4){
-                        hue = 116/360;
-                        sat = 0.5-(height*2-0.4);
-                        light = 0.6* (height*2);
-
-                    //snow
-                    } else {
-                        sat = 0;
-                        light = 1* (height*2);  
-                    }
-                    c.setHSL(hue,sat,light)
-                    colors.push( c.r, c.g, c.b );
-                }
-
-                geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-                geometry.computeVertexNormals();
-
-            }    
-            draw();
-            // controls
-            // var controls = new OrbitControls( camera, renderer.domElement );
-            // // controls.minPolarAngle = Math.PI/0.5;
-            // controls.maxPolarAngle = Math.PI * 0.5;
-            // controls.minDistance = 3000;
-            // controls.maxDistance = 5000;
-
-            scene.add( mesh );
-            
-
-            function animate() {
-                requestAnimationFrame( animate );
-                geometry.rotateY( - Math.PI / 2 * clock.getDelta() /10);
-                renderer.render( scene, camera );
+    <head>
+        <title>Islands</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet"> 
+        <style>
+            html{
+                background-color: #fff;
+                font-family: 'Comfortaa', cursive;
+                font-size: 140%;
+                line-height: 1.5em;
             }
-
-            animate();
-
-            function regen(){
-                data = generateHeight( worldWidth, worldDepth );
-                draw();
-
+            body{
+                margin:0;
             }
-            document.getElementById("regen").addEventListener('click', regen);
+            h1, h2{
+                text-align: center;
+                margin-bottom: 0px;
+            }
+            h3{
+                font-weight: bold;
+            }
+            .container{
+                max-width: 32em;
+                display: block;
+                margin: auto;
+                padding:2em 1em;
+            }
+            #island-grid{
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                /* border-radius: 20px; */
+                /* border:black 4px solid; */
+            }
+            #island-grid img{
+                image-rendering: crisp-edges;
+                margin:0.2em;
+                display:block;
+                flex-grow: 1;
+                width: 150px;
+                border-radius: 10px;
+                /* border:black 3px solid; */
+            }
+            #nav{
+                position: absolute;
+                right: 0px;
+                top: 6px;
+                font-size: 90%;
+            }
+            #nav a{
+                padding:1em;
+            }
+            a{
+                color: #007780;
+                text-decoration: none;
+            }
+            a:hover{
+                text-decoration: underline;
+            }
+            .button{
+                background-color: #009cb8;
+                color:white;
+                display: block;
+                font-weight: 700;
+                font-size: 120%;
+                border-radius: 10px;
+                padding:  0.5em 1em;
+                border:none;
+                margin: auto;
+                margin:1em auto;
+                width: 4em;
+                text-align: center;
+            }
+            input{
+                font-size: 90%;
+                border-radius: 10px;
+                /* border:black 4px solid; */
+                padding:  0.5em 1em;
+                border:none;
+                display: block;
+                margin:1em 0;
+                width: 100%;
+                border:1px grey solid;
+            }
+            form{
+                text-align: center;
+                margin: auto;
+                display: block;
+                max-width: 20em;
+                padding:1em;
+            }
+            .wide{
+                background-color: #009cb8;
+                color:white;
+                padding:2em 0;
+            }
+            .white{
+                background-color:white;
+                color:#000;
+            }
+            h4{
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="nav">
+            <a href="https://opensea.io/collection/islands-g1" target="blank" class="nav">View Collection</a>
+            <a href="#join" class="nav">Join Waitlist</a>
+            <a href="#faq" class="nav">FAQ</a>
+        </div>
+        <div class="container">
+            <h1>Islands</h1>
+            <p style="text-align: center;margin-top:0px;">An NFT for everyone.</p>
+            <br>
+            <div id="island-grid">
+                <img src="images/island01.gif"/>
+                <img src="images/island02.gif"/>
+                <img src="images/island03.gif"/>
+                <img src="images/island04.gif"/>
+                <img src="images/island05.gif"/>
+                <img src="images/island06.gif"/>
+                <img src="images/island07.gif"/>
+                <img src="images/island08.gif"/>
+                <img src="images/island09.gif"/>
+                <img src="images/island10.gif"/>
+                <img src="images/island11.gif"/>
+                <img src="images/island12.gif"/>
+            </div>
 
-            function generateHeight( width, height ) {
-				var size = width * height, data = new Uint8Array( size ),
-					perlin = new ImprovedNoise(), quality = 1, z = Math.random() *100;
-				for ( var j = 0; j < 4; j ++ ) {
-					for ( var i = 0; i < size; i ++ ) {
-						var x = i % width, y = ~ ~ ( i / width );
-						data[ i ] += Math.abs( perlin.noise( x / quality, y / quality, z ) * quality * 1.75 );
-                        // data[i] = 10;
-                        if(j == 3){
-                            // console.log(Math.sqrt(Math.pow(Math.abs(x -32),2) + Math.pow(Math.abs(y -32),2)));
-                            var distance  = Math.sqrt(Math.pow(Math.abs(x -width*.5),2) + Math.pow(Math.abs(y -width*.5),2))/width;
-                            var power = 10;
-                            // height = ((Math.cos(Math.PI * distance +1))/2)*power; 
-                            var height =  Math.pow(0.5 + 0.5 * Math.cos(Math.PI * distance), power);
-                            // console.log(height);
-                            data[i]  = (data[i] * height)/2;
-                        }
-					}
-					quality *= 5;
-                    
-				}
-				return data;
-			}
+            <br>
+            <h2 id="view">The first generation is already live.</h2>
+            <a target="blank" class="button" href="https://opensea.io/collection/islands-g1">View</a>
+            
+        </div>
+        <div class="wide" id="join">
+            <br>
+            <h2>Want to be part of the next batch?</h2>
+            <form netlify>
+                <input type=email name="Email" placeholder="Email">
+                <input style="font-size: 75%;" type=text name="Eth Address" placeholder="ETH Address">
+                <p style="font-size:50%;margin-top: -1em;line-height: 1.5em;">Note: The asset will only be able to be purchaseable by this address.</p>
+                <input type=submit class="button white" value="Join" style="font-family: 'Comfortaa', cursive;">
+            </form>
+            <br>
+        </div>
+        <div class="container">
+            <h2 id="roadmap">Roadmap</h2>
+            <h4>16<sup>th</sup> September - Launch</h4>
+            <p>The first 12 Islands will be made available and 
+                people can sign up to the waitlist.</p>
 
-		</script>
-	</body>
+            <h4>29<sup>th</sup> September - Gen 2 Release</h4>
+            <p>Generation 2 will go live and those on the waitlist 
+                will get an invite to claim their Island.</p>
+            
+            <h4>Monthly Releases</h4>
+            <p>Each month a new generation of Islands will be released for those on the waitlist.</p>
+
+            <h2 id="faq">FAQ</h2>
+            <h3>Why?</h3>
+            <p>As time has gone on things have become less and less obtainable for me personally. It seems now that owning a home in my country might be impossible goal for me and many others. This project is both a way for me to do something I love (procedural generation) and hopefully instill a little joy for others to own their very own Island.</p>
+            <h3>How will Islands be distributed?</h3>
+            <p>To avoid abuse Islands will be given to people via a wait list. Whenever new Islands are minted everyone on the wait list will have an opportunity claim theirs.
+                The aim will be to create an excess supply to the demand.</p>
+
+            <h3>How much will they cost?</h3>
+            <p>Nothing. They will be listed on OpenSea for people on the waitlist. You will have 2 weeks to claim them before they go back into the pool to be claimed by someone else.</p>
+            
+            <h3>How long will new Islands be minted for?</h3>
+            <p>I want to ensure that anyone that wants an Island can get one, if there is interest then I will try to keep this up for as long as I can.</p>
+            
+            <h3>Will newly minted Islands be the same as previous ones?</h3>
+            <p>Every new generation of Islands will be released a month apart. Each will be slightly different, perhaps different biomes, objects, colours - they will all be Islands.</p>
+            
+            <h3>Can I get more than 1?</h3>
+            <p>To make it easier for each person to get one, the waitlist will be reserved only for people that don't already have an Island.</p>
+            <p>Yes, you could just sign up with a different email address, but this really just puts more stress on me the creator to create excess.</p>
+            <p>If there is demand for it, then I can create some scheduled drops in larger batches.</p>
+
+            <img src="oprah.jpg" style="margin:auto; display:block;"/>
+        </div>
+    </body>
 </html>
+
